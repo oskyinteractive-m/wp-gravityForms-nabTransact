@@ -126,15 +126,23 @@ function pre_submission_handler( $form )
                 : 0 ;
 
     $user = wp_get_current_user();
+    $user_id = ($user && isset($user->ID)) ? (int) $user->ID : 0;
+    $user_email = ($user && isset($user->user_email)) ? $user->user_email : '';
+    $first_name = ($user && isset($user->first_name)) ? $user->first_name : '';
+    $last_name = ($user && isset($user->last_name)) ? $user->last_name : '';
 
-    gf_nab_log("[Payment USER ".$user->data->ID."] Invoice Payment", 'INFO');
+    if ($user_id > 0) {
+        gf_nab_log("[Payment USER ".$user_id."] Invoice Payment", 'INFO');
+    }
 
-    $_POST['input_3'] = $user->first_name;
-    $_POST['input_4'] = $user->last_name;
+    $_POST['input_3'] = $first_name;
+    $_POST['input_4'] = $last_name;
 
-    gf_nab_log("[Payment USER ".$user->data->ID."] Firstname : $user->first_name, Lastname: $user->last_name", 'INFO');
-    gf_nab_log("[Payment USER ".$user->data->ID."] user->email :$user->email, user->data->user_email: ".$user->data->user_email, 'INFO');
-    gf_nab_log("[Payment USER ".$user->data->ID."] Amount : ".($_POST['input_6'] ?? '').", Invoice No : ".($_POST['input_1'] ?? ''), 'INFO');
+    if ($user_id > 0) {
+        gf_nab_log("[Payment USER ".$user_id."] Firstname : $first_name, Lastname: $last_name", 'INFO');
+        gf_nab_log("[Payment USER ".$user_id."] user_email: ".$user_email, 'INFO');
+        gf_nab_log("[Payment USER ".$user_id."] Amount : ".($_POST['input_6'] ?? '').", Invoice No : ".($_POST['input_1'] ?? ''), 'INFO');
+    }
 
 
     if($_POST['gform_submit'])
