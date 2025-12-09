@@ -1,0 +1,7 @@
+# AWS Cloud9 Dev Environment 
+.c9/*
+
+# Vendor directories (Composer dependencies)
+vendor/
+**/vendor/
+nab/vendor/
