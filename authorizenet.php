@@ -83,14 +83,16 @@ function de_gforms_confirmation_dynamic_redirect( $confirmation, $form, $entry, 
 {
     $error_page = get_option('gf_nab_error_page');
     
-    // If option is not set or empty, try to find the payment-error page by slug
+    // If option is not set or empty, try to find the payments page by slug
     if ( empty( $error_page ) ) {
-        $error_page_obj = get_page_by_path( 'payments/?' );
+        $error_page_obj = get_page_by_path( 'payments' );
         if ( $error_page_obj ) {
             $error_page = get_permalink( $error_page_obj->ID );
+            // Append query string to preserve entry data
+            $error_page = add_query_arg( array(), $error_page );
         } else {
             // Fallback to home_url if page doesn't exist
-            $error_page = home_url('/payments/?');
+            $error_page = home_url('/payments/');
             gf_nab_log('Payment error page not found. Using fallback URL: ' . $error_page, 'WARNING' );
         }
     }
@@ -111,7 +113,9 @@ function pre_submission_handler( $form )
     // Verify form submission is valid (CSRF protection)
     // Gravity Forms validates before this hook, but we add an extra check for security
     $form_id = absint(rgar($form, 'id'));
-    if (empty($form_id) || empty($_POST['is_submit_' . $form_id]) || $_POST['is_submit_' . $form_id] !== '1') {
+    // Check if gform_submit matches the form ID (Gravity Forms uses gform_submit, not is_submit_{form_id})
+    if (empty($form_id) || empty($_POST['gform_submit']) || absint($_POST['gform_submit']) !== $form_id) {
+        gf_nab_log('CSRF validation failed or form ID mismatch. Form ID: ' . $form_id . ', gform_submit: ' . (isset($_POST['gform_submit']) ? $_POST['gform_submit'] : 'not set'), 'WARNING');
         return;
     }
     
@@ -195,7 +199,7 @@ function pre_submission_handler( $form )
                     $error_msg = sprintf('Transaction %s failed: %s', $response->getTransactionReference(), $response->getMessage());
                     $_POST['input_8'] = $error_msg;
                     gf_nab_log('NAB Transact: Payment failed - ' . $error_msg, 'ERROR');
-                    add_filter('gform_confirmation', 'de_gforms_confirmation_dynamic_redirect', 10, 4);
+                    // Note: Not redirecting on failure to match dev branch behavior - shows normal confirmation with entry data
                 }
             }
         }
