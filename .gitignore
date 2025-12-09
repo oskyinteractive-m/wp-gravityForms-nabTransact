@@ -5,3 +5,7 @@
 vendor/
 **/vendor/
 nab/vendor/
+
+# Log files
+logs/
+*.log

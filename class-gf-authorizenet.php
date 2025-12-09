@@ -180,49 +180,6 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 
 
 			array(
-
-				/**
-				 * Disabling option to switch on or modify settings related to automatic recurring billing
-				 * This feature is not being provisioned as part of NAB Integration
-				 *
-
-				'title'  => esc_html__( 'Automated Recurring Billing Setup', 'gravityformsauthorizenet' ),
-				'fields' => array(
-					array(
-						'name'    => 'arb',
-						'label'   => 'ARB',
-						'type'    => 'checkbox',
-						'onchange' => "if(jQuery(this).prop('checked')){
-										jQuery('#gaddon-setting-row-automaticRetry').show();
-
-									} else {
-										jQuery('#gaddon-setting-row-automaticRetry').hide();
-
-									}",
-						'choices' => array(
-							array(
-								'label' => esc_html__( 'ARB is set up in my NAB Transact account.', 'gravityformsauthorizenet' ),
-								'name'  => 'arb'
-							)
-						),
-					),
-					array(
-						'name'    => 'automaticRetry',
-						'label'   => 'Automatic Retry',
-						'type'    => 'checkbox',
-						'hidden'  => ! $this->get_setting( 'arb' ),
-						'tooltip'       => '<h6>' . esc_html__( 'Automatic Retry', 'gravityformsauthorizenet' ) . '</h6>' . esc_html__( 'Automatic Retry enhances Recurring Billing so you do not need to manually collect failed payments. With Automatic Retry, your customer\'s subscriptions will not terminate due to payment failures and will remain in a suspended status until you update the subscription\'s payment details. Once updated, NAB Transact will automatically retry the failed payment in the subscription.'  , 'gravityformsauthorizenet' ),
-						'choices' => array(
-							array(
-								'label' => esc_html__( 'Automatic Retry is turned on in my NAB Transact account. To enable this feature in your NAB Transact account, go to the Recurring Billing page under Tools and click on "Enable Automatic Retry" under Settings.', 'gravityformsauthorizenet' ),
-								'name'  => 'automaticRetry'
-							)
-						),
-					),
-				),
-
-				*/
-
 				array(
 					'type'     => 'save',
 					'messages' => array( 'success' => esc_html__( 'Settings updated successfully', 'gravityformsauthorizenet' ) )
@@ -406,32 +363,12 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 	 *
 	 */
 
-   /**
-    * public function can_create_feed() {
-	*	return $this->is_valid_plugin_key();
-	*  }
-    *
-    */
-
 	public function feed_settings_fields() {
 		$default_settings = parent::feed_settings_fields();
 
 		//remove default options before adding custom
 		$default_settings = parent::remove_field( 'options', $default_settings );
 
-	/* Disable Initialisation Of "Options" Field In Nab Transact Feed Settings.
-	 * This Removes "Send Receipt To Customer Via Gateway Api" Which Is Not A Part
-	 * Of The Scope For This Integration
-
-		$fields = array(
-			array(
-				'name'    => 'options',
-				'label'   => esc_html__( 'Options', 'gravityformsauthorizenet' ),
-				'type'    => 'options',
-				'tooltip' => '<h6>' . esc_html__( 'Options', 'gravityformsauthorizenet' ) . '</h6>' . esc_html__( 'Turn on or off the available NAB Transact checkout options.', 'gravityformsauthorizenet' ),
-			),
-		);
-	*/
 		//Add post fields if form has a post
 		$form = $this->get_current_form();
 		if ( GFCommon::has_post_field( $form['fields'] ) ) {
@@ -507,7 +444,6 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 				'class'             => 'medium',
 				'hidden'            => ! $this->get_setting( 'apiSettingsEnabled' ),
 				'tooltip'           => '<h6>' . esc_html__( 'NAB Merchant ID', 'gravityformsauthorizenet' ) . '</h6>' . esc_html__( 'Enter a new value to override the NAB Merchant ID on the NAB Transact Settings page.', 'gravityformsauthorizenet' ),
-				//'feedback_callback' => array( $this, 'is_valid_custom_key' ),
 			),
 			array(
 				'name'              => 'overrideKey',
@@ -516,7 +452,6 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 				'class'             => 'medium',
 				'hidden'            => ! $this->get_setting( 'apiSettingsEnabled' ),
 				'tooltip'           => '<h6>' . esc_html__( 'Password', 'gravityformsauthorizenet' ) . '</h6>' . esc_html__( 'Enter a new value to override the Password on the NAB Transact Settings page.', 'gravityformsauthorizenet' ),
-				//'feedback_callback' => array( $this, 'is_valid_custom_key' ),
 			),
 		);
 
@@ -835,16 +770,11 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 		$config    = $this->get_config( $feed, $submission_data );
 		$form_data = $this->get_form_data( $submission_data, $form, $config );
 
-		//var_dump($form);
-
 		$transaction = apply_filters( 'gform_authorizenet_transaction_pre_authorize', $original_transaction, $form_data, $config, $form );
 		$transaction = apply_filters( 'gform_authorizenet_transaction_pre_capture', $transaction, $form_data, $config, $form, $entry );
 
 		//Check if transaction is false after gform_authorizenet_transaction_pre_capture filter. If false, payment is not captured; run authorizeOnly transaction
 		if ( ! $transaction ) {
-
-			var_dump('cccc');
-
 			$this->log_debug( __METHOD__ . '(): Running authorization only. The gform_authorizenet_transaction_pre_capture filter was used to set the transaction to false.' );
 
 			$auth_amount = apply_filters( 'gform_authorizenet_amount_pre_authorize', $form_data['amount'] + floatval( $form_data['fee_amount'] ), $original_transaction, $form_data, $config, $form, $entry );
@@ -881,18 +811,11 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 			return $auth;
 		}
 
-		//var_dump('hhh');
-
-
 		//deprecated
 		$transaction = apply_filters( 'gform_authorizenet_before_single_payment', $transaction, $form_data, $config, $form );
 
-		var_dump($transaction);
-
-
 		$this->log_debug( __METHOD__ . '(): Capturing funds.' );
 		$response = $transaction->authorizeAndCapture();
-		var_dump($response);
 
 		if ( $response->approved || $response->held ) {
 			$this->log_debug( __METHOD__ . "(): Funds captured successfully. Amount: {$response->amount}. Transaction Id: {$response->transaction_id}." );
@@ -938,16 +861,7 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 	}
 
 	public function get_payment_transaction( $feed, $submission_data, $form, $entry ) {
-
-		//var_dump('fff');
-
 		$transaction = $this->get_aim();
-		//echo "<pre>";
-		//var_dump($transaction);
-		//echo "</pre>";
-
-		//var_dump('tttt');
-
 
 		$feed_name = rgar( $feed['meta'], 'feedName' );
 		$this->log_debug( __METHOD__ . "(): Initializing new AuthorizeNetAIM object based on feed #{$feed['id']} - {$feed_name}." );
@@ -969,7 +883,6 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 		$transaction->country          = $submission_data['country'];
 		$transaction->email            = $submission_data['email'];
 		$transaction->description      = $submission_data['form_title'];
-		//$transaction->email_customer   = $feed['meta']['enableReceipt'] == 1 ? 'true' : 'false';
 		$transaction->email_customer   = 'false';
 		$transaction->duplicate_window = 5;
 		$transaction->customer_ip      = GFFormsModel::get_ip();
@@ -1201,9 +1114,6 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 	}
 
 	public function process_subscription( $authorization, $feed, $submission_data, $form, $entry ) {
-
-		//gform_update_meta( $entry['id'], 'subscription_payment_date', gmdate( 'Y-m-d H:i:s' ) );
-
 		gform_update_meta( $entry['id'], 'subscription_payment_date', $authorization['subscription']['subscription_start_date']);
 		gform_update_meta( $entry['id'], 'subscription_payment_count', '1' );
 		gform_update_meta( $entry['id'], 'subscription_regular_amount', $authorization['subscription']['amount'] );
@@ -1325,7 +1235,6 @@ class GFAuthorizeNet extends GFPaymentAddOn {
 					$subscription_id = $result->transaction_id;
 					$local_api_settings = $this->get_local_api_settings($feed);
 					$status_request  = $this->get_arb($local_api_settings);
-					//$status_request  = $this->get_arb();
 					$status_response = $status_request->getSubscriptionStatus( $subscription_id );
 					$this->log_debug( __METHOD__ . '(): Subscription status response => ' . print_r($status_response,1));
 					$status          = $status_response->getSubscriptionStatus();
